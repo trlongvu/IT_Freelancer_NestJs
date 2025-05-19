@@ -6,6 +6,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { IS_PUBLIC_KEY } from 'src/decorators/customize';
+import { IUser } from 'src/users/users.interface';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -23,7 +24,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     return super.canActivate(context);
   }
 
-  handleRequest(err, user, info) {
+  handleRequest(err: any, user: IUser, info: any): any {
     if (err || !user) {
       throw err || new UnauthorizedException('Invalid token');
     }
