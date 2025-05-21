@@ -9,6 +9,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/user.schema';
 import mongoose, { DeleteResult, Model, UpdateResult } from 'mongoose';
 import * as bcrypt from 'bcrypt';
+import { IUser } from './users.interface';
+import { FilterUserDto } from './dto/filter-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -27,55 +29,125 @@ export class UsersService {
     return await bcrypt.compare(password, hash);
   }
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
+  async create(createUserDto: CreateUserDto, user_decorator: IUser) {
     const user = await this.findOneByEmail(createUserDto.email);
     if (user) {
       throw new BadRequestException('User already exists');
     }
     const hashPass = await this.getHashPassword(createUserDto.password);
-    return this.userModel.create({
+    const newUser = await this.userModel.create({
       ...createUserDto,
       password: hashPass,
+      createdBy: {
+        _id: user_decorator._id,
+        email: user_decorator.email,
+      },
     });
+    return {
+      _id: newUser._id,
+      createdBy: newUser.createdBy,
+    };
   }
 
-  async findAll(): Promise<User[]> {
-    return await this.userModel.find();
+  async findAll(query: FilterUserDto) {
+    const { search } = query;
+
+    const current_page = Number(query.page) || 1;
+    const items_per_page = Number(query.items_per_page) || 10;
+    const offset = (current_page - 1) * items_per_page;
+
+    const filter: {
+      isDeleted: boolean;
+      $or: any[];
+      // address: {}
+    } = {
+      isDeleted: false,
+      $or: [],
+      // address: {},
+    };
+
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    // if (address) {
+    //   filter.address = { $regex: address, $options: 'i' };
+    // }
+
+    const total_items = await this.userModel.countDocuments(filter);
+    const total_pages = Math.ceil(total_items / items_per_page);
+    const result = await this.userModel
+      .find(filter, { password: 0 })
+      .skip(offset)
+      .limit(items_per_page)
+      .lean();
+    return {
+      metadata: {
+        current: current_page,
+        page_size: items_per_page,
+        pages: total_pages,
+        total: total_items,
+      },
+      result,
+    };
   }
 
-  async findOne(_id: string): Promise<User> {
+  async findOne(_id: string) {
     if (!mongoose.Types.ObjectId.isValid(_id)) {
       throw new BadRequestException('Invalid id');
     }
-    const user = await this.userModel.findById(_id);
-    if (!user) {
+    const user = await this.userModel.findById(_id, { password: 0 }).lean();
+    if (!user || user.isDeleted) {
       throw new NotFoundException('User not found');
     }
+
     return user;
   }
 
   async update(
     _id: string,
     updateUserDto: UpdateUserDto,
-  ): Promise<UpdateResult> {
+    user_decorator: IUser,
+  ) {
     if (!mongoose.Types.ObjectId.isValid(_id)) {
       throw new BadRequestException('Invalid id');
     }
-    const user_update = await this.userModel.updateOne(
-      { _id },
-      { ...updateUserDto, updatedAt: new Date() },
+    const user_update = await this.userModel.findOneAndUpdate(
+      { _id, isDeleted: false },
+      {
+        ...updateUserDto,
+        updatedBy: {
+          _id: user_decorator._id,
+          email: user_decorator.email,
+        },
+      },
+      { new: true },
     );
-    if (!user_update.modifiedCount) {
+    if (!user_update) {
       throw new NotFoundException('User not found');
     }
     return user_update;
   }
-  async remove(_id: string): Promise<DeleteResult> {
+  async remove(_id: string, user_decorator: IUser) {
     if (!mongoose.Types.ObjectId.isValid(_id)) {
       throw new BadRequestException('Invalid id');
     }
-    const user_delete = await this.userModel.deleteOne({ _id });
-    if (!user_delete.deletedCount) {
+    const user_delete = await this.userModel.findOneAndUpdate(
+      { _id, isDeleted: false },
+      {
+        isDeleted: true,
+        deletedAt: new Date(),
+        deletedBy: {
+          _id: user_decorator._id,
+          email: user_decorator.email,
+        },
+      },
+      { new: true },
+    );
+    if (!user_delete) {
       throw new NotFoundException('User not found');
     }
     return user_delete;
@@ -84,4 +156,27 @@ export class UsersService {
   async findOneByEmail(email: string): Promise<User | null> {
     return this.userModel.findOne({ email }).lean();
   }
+
+  updateUserToken = async (_id: string, refresh_token: string) => {
+    return await this.userModel.updateOne(
+      { _id, isDeleted: false },
+      {
+        $set: {
+          refreshToken: refresh_token,
+        },
+      },
+    );
+  };
+
+  findUserByToken = (refresh_token: string) => {
+    return this.userModel
+      .findOne(
+        {
+          refreshToken: refresh_token,
+          isDeleted: false,
+        },
+        { password: 0 },
+      )
+      .lean();
+  };
 }

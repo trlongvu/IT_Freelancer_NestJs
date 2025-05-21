@@ -8,19 +8,24 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStratery } from './passport/jwt.strategy';
 import ms, { StringValue } from 'ms';
 import { AuthController } from './auth.controller';
+import { MongooseModule } from '@nestjs/mongoose';
+import { User } from 'src/users/schemas/user.schema';
 
 @Module({
   imports: [
     UsersModule,
     PassportModule,
+    ConfigModule,
+    MongooseModule.forFeature([{ name: User.name, schema: User }]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_ACCESS_TOKEN'),
+        secret: configService.get<string>('JWT_ACCESS_TOKEN_SECRET'),
         signOptions: {
-          expiresIn: ms(
-            configService.get<string>('JWT_ACCESS_EXPIRES_IN') as StringValue,
-          ),
+          expiresIn:
+            ms(
+              configService.get<string>('JWT_ACCESS_EXPIRES_IN') as StringValue,
+            ) / 1000,
         },
       }),
       inject: [ConfigService],

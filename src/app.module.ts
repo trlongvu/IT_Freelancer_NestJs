@@ -18,6 +18,7 @@ import { CompaniesModule } from './companies/companies.module';
     }),
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '.env',
     }),
     UsersModule,
     AuthModule,
