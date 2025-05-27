@@ -5,8 +5,12 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Response } from 'express';
 import { Model } from 'mongoose';
 import ms, { StringValue } from 'ms';
+import { permission } from 'process';
+import { USER_ROLE } from 'src/databases/sample';
+import { RolesService } from 'src/roles/roles.service';
+import { Role, RoleDocument } from 'src/roles/schemas/role.schema';
 import { RegisterUserDto } from 'src/users/dto/create-user.dto';
-import { User } from 'src/users/schemas/user.schema';
+import { User, UserDocument } from 'src/users/schemas/user.schema';
 import { IUser } from 'src/users/users.interface';
 import { UsersService } from 'src/users/users.service';
 
@@ -14,8 +18,13 @@ import { UsersService } from 'src/users/users.service';
 export class AuthService {
   constructor(
     @InjectModel(User.name)
-    private userModel: Model<User>,
+    private userModel: Model<UserDocument>,
+
+    @InjectModel(Role.name)
+    private roleModel: Model<RoleDocument>,
+
     private usersService: UsersService,
+    private roleService: RolesService,
     private jwtService: JwtService,
     private configService: ConfigService,
   ) {}
@@ -28,7 +37,13 @@ export class AuthService {
         user.password,
       );
       if (isMatch) {
-        return user;
+        const userRole = user.role as unknown as { _id: string; name: string };
+        const temp = await this.roleService.findOne(userRole._id);
+        const objUser = {
+          ...user,
+          permissions: temp?.permissions ?? [],
+        };
+        return objUser;
       }
     }
     return null;
@@ -39,10 +54,14 @@ export class AuthService {
     if (user) {
       throw new BadRequestException('Email already exists');
     }
+    const userRole = await this.roleModel.findOne({
+      name: USER_ROLE,
+      isDeleted: false,
+    });
     const newUser = await this.userModel.create({
       ...body,
       password: await this.usersService.getHashPassword(body.password),
-      role: 'user',
+      role: userRole?._id,
     });
     return {
       _id: newUser._id,
@@ -67,6 +86,8 @@ export class AuthService {
     });
 
     await this.usersService.updateUserToken(_id, refresh_token);
+    const userRole = user.role as unknown as { _id: string; name: string };
+    const temp = await this.roleService.findOne(userRole._id);
 
     res.cookie('refresh_token', refresh_token, {
       httpOnly: true,
@@ -82,6 +103,7 @@ export class AuthService {
         name,
         email,
         role,
+        permissions: temp?.permissions ?? [],
       },
     };
   }
@@ -127,6 +149,9 @@ export class AuthService {
         new_refresh_token,
       );
 
+      const userRole = user.role as unknown as { _id: string; name: string };
+      const temp = await this.roleService.findOne(userRole._id);
+
       res.clearCookie('name');
       res.cookie('refresh_token', new_refresh_token, {
         httpOnly: true,
@@ -144,6 +169,7 @@ export class AuthService {
           name: user.name,
           email: user.email,
           role: user.role,
+          permissions: temp?.permissions ?? [],
         },
       };
     } catch (error) {

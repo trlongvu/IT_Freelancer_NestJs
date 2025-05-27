@@ -16,7 +16,7 @@ export class Resume {
     ref: User.name,
     required: true,
   })
-  userId: mongoose.Schema.Types.ObjectId;
+  userId: mongoose.Types.ObjectId;
 
   @Prop({ type: String, required: true })
   url: string;
@@ -29,10 +29,10 @@ export class Resume {
     ref: Company.name,
     required: true,
   })
-  companyId: mongoose.Schema.Types.ObjectId;
+  companyId: mongoose.Types.ObjectId;
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: Job.name, required: true })
-  jobId: mongoose.Schema.Types.ObjectId;
+  jobId: mongoose.Types.ObjectId;
 
   @Prop({ type: mongoose.Schema.Types.Array })
   history: {

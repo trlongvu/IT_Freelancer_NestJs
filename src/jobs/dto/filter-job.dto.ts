@@ -10,7 +10,7 @@ export class FilterJobDto {
   items_per_page?: string;
 
   @IsOptional()
-  @IsOptional()
+  @IsString()
   search?: string;
 
   @IsOptional()

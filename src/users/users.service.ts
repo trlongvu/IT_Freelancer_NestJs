@@ -6,17 +6,25 @@ import {
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { User } from './schemas/user.schema';
-import mongoose, { DeleteResult, Model, UpdateResult } from 'mongoose';
+import { User, UserDocument } from './schemas/user.schema';
+import mongoose, { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { IUser } from './users.interface';
 import { FilterUserDto } from './dto/filter-user.dto';
+import { ConfigService } from '@nestjs/config';
+import { USER_ROLE } from 'src/databases/sample';
+import { Role, RoleDocument } from 'src/roles/schemas/role.schema';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name)
-    private userModel: Model<User>,
+    private userModel: Model<UserDocument>,
+
+    @InjectModel(Role.name)
+    private roleModel: Model<RoleDocument>,
+
+    private configService: ConfigService,
   ) {}
 
   async getHashPassword(password: string): Promise<string> {
@@ -34,10 +42,16 @@ export class UsersService {
     if (user) {
       throw new BadRequestException('User already exists');
     }
+
+    const userRole = await this.roleModel.findOne({
+      name: USER_ROLE,
+      isDeleted: false,
+    });
     const hashPass = await this.getHashPassword(createUserDto.password);
     const newUser = await this.userModel.create({
       ...createUserDto,
       password: hashPass,
+      role: userRole?._id,
       createdBy: {
         _id: user_decorator._id,
         email: user_decorator.email,
@@ -79,11 +93,16 @@ export class UsersService {
 
     const total_items = await this.userModel.countDocuments(filter);
     const total_pages = Math.ceil(total_items / items_per_page);
+
     const result = await this.userModel
       .find(filter, { password: 0 })
       .skip(offset)
       .limit(items_per_page)
-      .lean();
+      .sort({ createdAt: -1 })
+      .populate('role', '_id name')
+      .lean()
+      .exec();
+
     return {
       metadata: {
         current: current_page,
@@ -99,7 +118,10 @@ export class UsersService {
     if (!mongoose.Types.ObjectId.isValid(_id)) {
       throw new BadRequestException('Invalid id');
     }
-    const user = await this.userModel.findById(_id, { password: 0 }).lean();
+    const user = await this.userModel
+      .findById(_id, { password: 0 })
+      .populate('role', '_id name')
+      .lean();
     if (!user || user.isDeleted) {
       throw new NotFoundException('User not found');
     }
@@ -135,6 +157,17 @@ export class UsersService {
     if (!mongoose.Types.ObjectId.isValid(_id)) {
       throw new BadRequestException('Invalid id');
     }
+
+    const userAdmin = await this.userModel.findOne({
+      _id,
+      isDeleted: false,
+    });
+    if (userAdmin?.email === this.configService.get<string>('EMAIL_ADMIN')) {
+      throw new BadRequestException(
+        'You cannot delete the admin user. Please contact support.',
+      );
+    }
+
     const user_delete = await this.userModel.findOneAndUpdate(
       { _id, isDeleted: false },
       {
@@ -154,7 +187,7 @@ export class UsersService {
   }
 
   async findOneByEmail(email: string): Promise<User | null> {
-    return this.userModel.findOne({ email }).lean();
+    return this.userModel.findOne({ email }).populate('role', 'name').lean();
   }
 
   updateUserToken = async (_id: string, refresh_token: string) => {
@@ -177,6 +210,7 @@ export class UsersService {
         },
         { password: 0 },
       )
+      .populate('role', 'name')
       .lean();
   };
 }

@@ -10,13 +10,19 @@ import ms, { StringValue } from 'ms';
 import { AuthController } from './auth.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User } from 'src/users/schemas/user.schema';
+import { Role, RoleSchema } from 'src/roles/schemas/role.schema';
+import { RolesModule } from 'src/roles/roles.module';
 
 @Module({
   imports: [
     UsersModule,
     PassportModule,
     ConfigModule,
-    MongooseModule.forFeature([{ name: User.name, schema: User }]),
+    RolesModule,
+    MongooseModule.forFeature([
+      { name: User.name, schema: User },
+      { name: Role.name, schema: RoleSchema },
+    ]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({

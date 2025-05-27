@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { Company } from './schemas/company.schema';
+import { Company, CompanyDocument } from './schemas/company.schema';
 import mongoose, { Model, UpdateResult } from 'mongoose';
 import { IUser } from 'src/users/users.interface';
 import { FilterCompanyDto } from './dto/filter-company.dto';
@@ -11,7 +11,7 @@ import { FilterCompanyDto } from './dto/filter-company.dto';
 export class CompaniesService {
   constructor(
     @InjectModel(Company.name)
-    private companyModel: Model<Company>,
+    private companyModel: Model<CompanyDocument>,
   ) {}
   async create(
     createCompanyDto: CreateCompanyDto,
@@ -33,10 +33,9 @@ export class CompaniesService {
     const items_per_page = Number(query.items_per_page) || 10;
     const offset = (current_page - 1) * items_per_page;
 
-    const filter: { isDeleted: boolean; $or: any[]; address: any } = {
+    const filter: { isDeleted: boolean; $or: any[]; address?: any } = {
       isDeleted: false,
       $or: [],
-      address: {},
     };
 
     if (search) {

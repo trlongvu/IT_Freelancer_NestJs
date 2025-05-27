@@ -1,5 +1,4 @@
 import { IsNotEmpty, IsOptional, MinLength } from 'class-validator';
-import mongoose from 'mongoose';
 
 export class UpdateCompanyDto {
   @IsOptional()
@@ -13,4 +12,8 @@ export class UpdateCompanyDto {
   @IsOptional()
   @MinLength(2, { message: 'Description must be at least 2 characters long' })
   description?: string;
+
+  @IsOptional()
+  @IsNotEmpty({ message: 'Logo is required' })
+  logo?: string;
 }

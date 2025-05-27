@@ -8,11 +8,14 @@ export class Company {
   @Prop({ required: true, type: String })
   name: string;
 
-  @Prop({ type: String })
+  @Prop({ type: String, required: true })
   address: string;
 
-  @Prop({ type: String })
+  @Prop({ type: String, required: true })
   description: string;
+
+  @Prop({ type: String, required: true })
+  logo: string;
 
   @Prop({ type: Object })
   createdBy: {

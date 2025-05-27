@@ -13,10 +13,14 @@ import { LocalAuthGuard } from './local-auth.guard';
 import { Request, Response } from 'express';
 import { IUser } from 'src/users/users.interface';
 import { RegisterUserDto } from 'src/users/dto/create-user.dto';
+import { RolesService } from 'src/roles/roles.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly roleService: RolesService,
+  ) {}
 
   @Public()
   @ResponseMessage('Register successfully')
@@ -36,7 +40,9 @@ export class AuthController {
   // @UseGuards(JwtAuthGuard) // Da su dung global
   @Get('account')
   @ResponseMessage('Get account successfully')
-  getAccount(@User() user: IUser) {
+  async getAccount(@User() user: IUser) {
+    const temp = await this.roleService.findOne(user.role._id);
+    user.permissions = temp.permissions;
     return { user };
   }
 

@@ -4,9 +4,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CreateResumeDto } from './dto/create-resume.dto';
-import { UpdateResumeDto } from './dto/update-resume.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { Resume } from './schemas/resume.schema';
+import { Resume, ResumeDocument } from './schemas/resume.schema';
 import mongoose, { Model } from 'mongoose';
 import { IUser } from 'src/users/users.interface';
 import { FilterResumeDto } from './dto/filter-resume.dto';
@@ -15,7 +14,7 @@ import { FilterResumeDto } from './dto/filter-resume.dto';
 export class ResumesService {
   constructor(
     @InjectModel(Resume.name)
-    private resumeModel: Model<Resume>,
+    private resumeModel: Model<ResumeDocument>,
   ) {}
   async create(createResumeDto: CreateResumeDto, user: IUser) {
     return await this.resumeModel.create({
@@ -33,7 +32,12 @@ export class ResumesService {
   }
 
   async getCvByUser(user: IUser) {
-    return await this.resumeModel.find({ userId: user._id, isDeleted: false });
+    return await this.resumeModel
+      .find({ userId: user._id, isDeleted: false })
+      .sort({ createdAt: -1 })
+      .populate('companyId', 'name')
+      .populate('jobId', 'name')
+      .exec();
   }
 
   async findAll(query: FilterResumeDto) {
@@ -49,10 +53,7 @@ export class ResumesService {
     };
 
     if (search) {
-      filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-      ];
+      filter.$or = [{ email: { $regex: search, $options: 'i' } }];
     }
 
     if (status) {
@@ -69,7 +70,8 @@ export class ResumesService {
       .sort({ createdAt: -1 })
       .populate('userId', 'email name')
       .populate('companyId', 'name')
-      .populate('jobId', 'title');
+      .populate('jobId', 'title')
+      .exec();
 
     return {
       metadata: {

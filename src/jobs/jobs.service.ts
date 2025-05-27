@@ -3,7 +3,7 @@ import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
 import { IUser } from 'src/users/users.interface';
 import { InjectModel } from '@nestjs/mongoose';
-import { Job } from './schemas/job.schema';
+import { Job, JobDocument } from './schemas/job.schema';
 import mongoose, { Model } from 'mongoose';
 import { FilterJobDto } from './dto/filter-job.dto';
 import dayjs from 'dayjs';
@@ -12,7 +12,7 @@ import dayjs from 'dayjs';
 export class JobsService {
   constructor(
     @InjectModel(Job.name)
-    private jobModel: Model<Job>,
+    private jobModel: Model<JobDocument>,
   ) {}
 
   async create(createJobDto: CreateJobDto, user: IUser) {

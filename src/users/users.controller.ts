@@ -10,14 +10,12 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { User } from './schemas/user.schema';
 import {
   Public,
   ResponseMessage,
   User as UserDecorator,
 } from '../decorators/customize';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { DeleteResult, UpdateResult } from 'mongoose';
 import { IUser } from './users.interface';
 import { FilterUserDto } from './dto/filter-user.dto';
 
