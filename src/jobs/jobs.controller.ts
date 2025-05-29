@@ -36,6 +36,12 @@ export class JobsController {
     };
   }
 
+  @Get('by-hr')
+  @ResponseMessage('Get list jobs successfully')
+  findJobsByHr(@Query() query: FilterJobDto, @UserDecorator() user: IUser) {
+    return this.jobsService.findJobsByHr(query, user);
+  }
+
   @Public()
   @Get()
   @ResponseMessage('Get list jobs successfully')

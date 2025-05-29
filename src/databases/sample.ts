@@ -26,7 +26,7 @@ export const INIT_PERMISSIONS = [
   },
   {
     name: 'Update Company',
-    apiPath: '/api/v1/companies/:id',
+    apiPath: '/api/v1/companies/:_id',
     method: 'PATCH',
     module: 'COMPANIES',
     createdBy: {
@@ -36,7 +36,7 @@ export const INIT_PERMISSIONS = [
   },
   {
     name: 'Delete Company',
-    apiPath: '/api/v1/companies/:id',
+    apiPath: '/api/v1/companies/:_id',
     method: 'DELETE',
     module: 'COMPANIES',
     createdBy: {
@@ -46,7 +46,7 @@ export const INIT_PERMISSIONS = [
   },
   {
     name: 'Get Company by id',
-    apiPath: '/api/v1/companies/:id',
+    apiPath: '/api/v1/companies/:_id',
     method: 'GET',
     module: 'COMPANIES',
     createdBy: {
@@ -66,7 +66,7 @@ export const INIT_PERMISSIONS = [
   },
   {
     name: 'Get User by Id',
-    apiPath: '/api/v1/users/:id',
+    apiPath: '/api/v1/users/:_id',
     method: 'GET',
     module: 'USERS',
     createdBy: {
@@ -86,7 +86,7 @@ export const INIT_PERMISSIONS = [
   },
   {
     name: 'Update User',
-    apiPath: '/api/v1/users/:id',
+    apiPath: '/api/v1/users/:_id',
     method: 'PATCH',
     module: 'USERS',
     createdBy: {
@@ -96,7 +96,7 @@ export const INIT_PERMISSIONS = [
   },
   {
     name: 'Delete User',
-    apiPath: '/api/v1/users/:id',
+    apiPath: '/api/v1/users/:_id',
     method: 'DELETE',
     module: 'USERS',
     createdBy: {
@@ -126,7 +126,7 @@ export const INIT_PERMISSIONS = [
   },
   {
     name: 'Get a job by id',
-    apiPath: '/api/v1/jobs/:id',
+    apiPath: '/api/v1/jobs/:_id',
     method: 'GET',
     module: 'JOBS',
     createdBy: {
@@ -136,7 +136,7 @@ export const INIT_PERMISSIONS = [
   },
   {
     name: 'Update a Job',
-    apiPath: '/api/v1/jobs/:id',
+    apiPath: '/api/v1/jobs/:_id',
     method: 'PATCH',
     module: 'JOBS',
     createdBy: {
@@ -156,7 +156,7 @@ export const INIT_PERMISSIONS = [
   },
   {
     name: 'Delete a Job',
-    apiPath: '/api/v1/jobs/:id',
+    apiPath: '/api/v1/jobs/:_id',
     method: 'DELETE',
     module: 'JOBS',
     createdBy: {
@@ -186,7 +186,7 @@ export const INIT_PERMISSIONS = [
   },
   {
     name: 'Get resume by id',
-    apiPath: '/api/v1/resumes/:id',
+    apiPath: '/api/v1/resumes/:_id',
     method: 'GET',
     module: 'RESUMES',
     createdBy: {
@@ -196,7 +196,7 @@ export const INIT_PERMISSIONS = [
   },
   {
     name: 'Delete a resume',
-    apiPath: '/api/v1/resumes/:id',
+    apiPath: '/api/v1/resumes/:_id',
     method: 'DELETE',
     module: 'RESUMES',
     createdBy: {
@@ -206,7 +206,7 @@ export const INIT_PERMISSIONS = [
   },
   {
     name: 'Update resume status',
-    apiPath: '/api/v1/resumes/:id',
+    apiPath: '/api/v1/resumes/:_id',
     method: 'PATCH',
     module: 'RESUMES',
     createdBy: {
@@ -246,7 +246,7 @@ export const INIT_PERMISSIONS = [
   },
   {
     name: 'Fetch permission by id',
-    apiPath: '/api/v1/permissions/:id',
+    apiPath: '/api/v1/permissions/:_id',
     method: 'GET',
     module: 'PERMISSIONS',
     createdBy: {
@@ -256,7 +256,7 @@ export const INIT_PERMISSIONS = [
   },
   {
     name: 'Update a permission',
-    apiPath: '/api/v1/permissions/:id',
+    apiPath: '/api/v1/permissions/:_id',
     method: 'PATCH',
     module: 'PERMISSIONS',
     createdBy: {
@@ -266,7 +266,7 @@ export const INIT_PERMISSIONS = [
   },
   {
     name: 'Delete a permission',
-    apiPath: '/api/v1/permissions/:id',
+    apiPath: '/api/v1/permissions/:_id',
     method: 'DELETE',
     module: 'PERMISSIONS',
     createdBy: {
@@ -296,7 +296,7 @@ export const INIT_PERMISSIONS = [
   },
   {
     name: 'Fetch role by id',
-    apiPath: '/api/v1/roles/:id',
+    apiPath: '/api/v1/roles/:_id',
     method: 'GET',
     module: 'ROLES',
     createdBy: {
@@ -306,7 +306,7 @@ export const INIT_PERMISSIONS = [
   },
   {
     name: 'Update Role',
-    apiPath: '/api/v1/roles/:id',
+    apiPath: '/api/v1/roles/:_id',
     method: 'PATCH',
     module: 'ROLES',
     createdBy: {
@@ -316,7 +316,7 @@ export const INIT_PERMISSIONS = [
   },
   {
     name: 'Delete a Role',
-    apiPath: '/api/v1/roles/:id',
+    apiPath: '/api/v1/roles/:_id',
     method: 'DELETE',
     module: 'ROLES',
     createdBy: {

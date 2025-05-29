@@ -9,12 +9,17 @@ import { Resume, ResumeDocument } from './schemas/resume.schema';
 import mongoose, { Model } from 'mongoose';
 import { IUser } from 'src/users/users.interface';
 import { FilterResumeDto } from './dto/filter-resume.dto';
+import { UsersService } from 'src/users/users.service';
+import { JobsService } from 'src/jobs/jobs.service';
 
 @Injectable()
 export class ResumesService {
   constructor(
     @InjectModel(Resume.name)
     private resumeModel: Model<ResumeDocument>,
+
+    private userService: UsersService,
+    private jobService: JobsService,
   ) {}
   async create(createResumeDto: CreateResumeDto, user: IUser) {
     return await this.resumeModel.create({
@@ -38,6 +43,67 @@ export class ResumesService {
       .populate('companyId', 'name')
       .populate('jobId', 'name')
       .exec();
+  }
+
+  async getCvByHr(query: FilterResumeDto, jobId: string, user: IUser) {
+    const { search } = query;
+
+    const current_page = Number(query.page) || 1;
+    const items_per_page = Number(query.items_per_page) || 10;
+    const offset = (current_page - 1) * items_per_page;
+
+    const userDetail = await this.userService.findOne(user._id);
+    if (!userDetail.company?._id) {
+      throw new NotFoundException('Company of HR is not found');
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      throw new BadRequestException('Invalid job ID');
+    }
+
+    const job = await this.jobService.findOne(jobId);
+    if (!job || job.company._id !== userDetail.company._id) {
+      throw new BadRequestException('Job is not belong to this company');
+    }
+
+    const filter: {
+      isDeleted: boolean;
+      $or: any[];
+      companyId: mongoose.Types.ObjectId;
+      jobId: mongoose.Types.ObjectId;
+    } = {
+      isDeleted: false,
+      $or: [],
+      companyId: userDetail.company._id,
+      jobId: new mongoose.Types.ObjectId(jobId),
+    };
+
+    if (search) {
+      filter.$or = [{ email: { $regex: search, $options: 'i' } }];
+    }
+
+    const total_items = await this.resumeModel.countDocuments(filter);
+    const total_pages = Math.ceil(total_items / items_per_page);
+
+    const result = await this.resumeModel
+      .find(filter)
+      .skip(offset)
+      .limit(items_per_page)
+      .sort({ createdAt: -1 })
+      .populate('userId', 'email name')
+      .populate('companyId', 'name')
+      .populate('jobId', 'title')
+      .exec();
+
+    return {
+      metadata: {
+        current: current_page,
+        page_size: items_per_page,
+        pages: total_pages,
+        total: total_items,
+      },
+      result,
+    };
   }
 
   async findAll(query: FilterResumeDto) {

@@ -10,7 +10,6 @@ import {
 } from '@nestjs/common';
 import { ResumesService } from './resumes.service';
 import { CreateResumeDto } from './dto/create-resume.dto';
-import { UpdateResumeDto } from './dto/update-resume.dto';
 import {
   ResponseMessage,
   User as UserDecorator,
@@ -26,6 +25,16 @@ export class ResumesController {
   @ResponseMessage('Get CV applied successfully')
   getCvByUser(@UserDecorator() user: IUser) {
     return this.resumesService.getCvByUser(user);
+  }
+
+  @Get('by-hr/:jobId')
+  @ResponseMessage('Get CV by HR successfully')
+  getCvByHr(
+    @Query() query: FilterResumeDto,
+    @Param('jobId') jobId: string,
+    @UserDecorator() user: IUser,
+  ) {
+    return this.resumesService.getCvByHr(query, jobId, user);
   }
 
   @Post()
